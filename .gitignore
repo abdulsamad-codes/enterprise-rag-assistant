@@ -1,5 +1,5 @@
-.venv/        # environment, never tracked
-.env          # API keys
-data/         # large documents, and some may be licensed
+.venv/
+.env
+data/
 __pycache__/
-chroma_db/    # generated vector store
+chroma_db/
