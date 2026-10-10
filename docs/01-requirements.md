@@ -1,6 +1,6 @@
 # Requirements Document: Enterprise RAG Assistant
 
-**Author:** Abdul Samad | **Version:** 0.1 (draft) | **Status:** Requirements drafted with AI assistance; to be reviewed against course material (Software Requirements Engineering)
+**Author:** Abdul Samad | **Version:** 0.2 (draft) | **Status:** Requirements drafted with AI assistance; to be reviewed against course material (Software Requirements Engineering)
 
 ---
 
@@ -29,7 +29,7 @@ This project builds an assistant that answers employee questions in plain langua
 - Fine-tuning or training models
 - Editing or creating documents through the assistant
 - Real-time sync with live company systems
-- Enterprise login (SSO); v1 uses a simple role selector or basic login
+- Enterprise login (SSO); v1 uses basic login with a signed token
 - Multi-company (multi-tenant) support
 
 ## 3. User Roles
@@ -59,8 +59,9 @@ The demo company is "Acme Corp"; its documents come from the public GitLab Handb
 | FR-10 | The system shall not follow instructions inside a user question or document that attempt to override access rules or system behavior. |
 | FR-11 | The system shall authenticate users and determine their role from a signed token. |
 | FR-12 | The system shall give the same "not found" reply for restricted and non-existent documents. |
-| FR-13 | The system shall verify that every citation refers to a chunk supplied to the LLM, remove invalid citations, and return "not found" if none remain. |## 5. Non-Functional Requirements
+| FR-13 | The system shall verify that every citation refers to a chunk supplied to the LLM, remove invalid citations, and return "not found" if none remain. |
 
+## 5. Non-Functional Requirements
 Targets are **initial and provisional**. They will be revised after the first baseline measurement.
 
 | ID     | Requirement      | Target                                                                                                 |
@@ -103,3 +104,4 @@ Questions and expected answers are written **from real handbook pages**, after t
 | FR-10          | Prompt-injection test cases              |
 | NFR-01, NFR-04 | Query logs (FR-08)                       |
 | NFR-02         | Evaluation script (FR-09)                |
+| FR-11, FR-12, FR-13 | Login test, restricted-document test, invalid-citation test |

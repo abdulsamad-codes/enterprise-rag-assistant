@@ -1,6 +1,6 @@
 # Design Document: Enterprise RAG Assistant
 
-**Author:** Abdul Samad | **Version:** 0.3 (draft) | **Depends on:** `01-requirements.md` v0.1
+**Author:** Abdul Samad | **Version:** 0.3 (draft) | **Depends on:** `01-requirements.md` v0.2
 
 ---
 
