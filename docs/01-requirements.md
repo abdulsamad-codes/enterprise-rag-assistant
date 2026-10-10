@@ -1,6 +1,6 @@
 # Requirements Document: Enterprise RAG Assistant
 
-**Author:** Abdul Samad | **Version:** 0.1 (draft) | **Status:** Requirements drafted with AI assistance; to be reviewed against course material (Software Requirements Engineering)
+**Author:** Abdul Samad | **Version:** 0.2 (draft) | **Status:** Requirements drafted with AI assistance; to be reviewed against course material (Software Requirements Engineering)
 
 ---
 
@@ -29,7 +29,7 @@ This project builds an assistant that answers employee questions in plain langua
 - Fine-tuning or training models
 - Editing or creating documents through the assistant
 - Real-time sync with live company systems
-- Enterprise login (SSO); v1 uses a simple role selector or basic login
+- Enterprise login (SSO); v1 uses basic login with a signed token
 - Multi-company (multi-tenant) support
 
 ## 3. User Roles
@@ -104,3 +104,4 @@ Questions and expected answers are written **from real handbook pages**, after t
 | FR-10          | Prompt-injection test cases              |
 | NFR-01, NFR-04 | Query logs (FR-08)                       |
 | NFR-02         | Evaluation script (FR-09)                |
+| FR-11, FR-12, FR-13 | Login test, restricted-document test, invalid-citation test |
