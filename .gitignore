@@ -3,3 +3,7 @@
 data/
 __pycache__/
 chroma_db/
+logs/
+.pytest_cache/
+*.db
+*.sqlite3
