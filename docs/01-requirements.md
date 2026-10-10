@@ -59,8 +59,9 @@ The demo company is "Acme Corp"; its documents come from the public GitLab Handb
 | FR-10 | The system shall not follow instructions inside a user question or document that attempt to override access rules or system behavior. |
 | FR-11 | The system shall authenticate users and determine their role from a signed token. |
 | FR-12 | The system shall give the same "not found" reply for restricted and non-existent documents. |
-| FR-13 | The system shall verify that every citation refers to a chunk supplied to the LLM, remove invalid citations, and return "not found" if none remain. |## 5. Non-Functional Requirements
+| FR-13 | The system shall verify that every citation refers to a chunk supplied to the LLM, remove invalid citations, and return "not found" if none remain. |
 
+## 5. Non-Functional Requirements
 Targets are **initial and provisional**. They will be revised after the first baseline measurement.
 
 | ID     | Requirement      | Target                                                                                                 |
