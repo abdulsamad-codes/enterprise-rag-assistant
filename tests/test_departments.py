@@ -8,6 +8,11 @@ from src.ingestion.departments import DEPARTMENT_MAPPINGS, department_for
     "source_path, expected_dept",
     [
         ("people-group/general-onboarding/index.md", "onboarding"),
+        ("people-group/general-onboarding/tanewki-tips.md", "people"),
+        ("people-group/general-onboarding/_index.md", "people"),
+        ("people-group/general-onboarding/mr-buddies.md", "onboarding"),
+        ("people-group/general-onboarding/onboarding-buddies.md", "onboarding"),
+        ("eta/corporate-it/end-user-services/onboarding101/linux-onboarding101.md", "onboarding"),
         ("people-group/time-off-and-absence/policy.md", "people"),
         ("people-policies/code-of-conduct.md", "people"),
         ("total-rewards/compensation/ranges.md", "people"),
@@ -58,6 +63,8 @@ def test_segment_boundaries(path: str, expected: str):
         "people-group/./x.md",  # Dot segment
         "people-group/x.md/",  # Trailing slash
         "people-group/x.md\n",  # Control character / newline
+        "eta/corporate-it/end-user-services/other.md",  # Unmapped sibling path
+        "eta/corporate-it/x.md",  # Unmapped parent path
         "",  # Empty path
         None,  # Non-string input
     ],

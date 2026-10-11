@@ -15,6 +15,30 @@
 - `data/` is excluded from Git, so the files are not stored in this repository.
 - The department is taken from the folder name.
 
+## Department Mapping
+
+| Folder or path prefix                              | Department    |
+| -------------------------------------------------- | ------------- |
+| `people-group/general-onboarding`                  | `onboarding`  |
+| `people-group/general-onboarding/tanewki-tips.md`  | `people`      |
+| `people-group/general-onboarding/_index.md`        | `people`      |
+| `people-group`                                     | `people`      |
+| `people-policies`                                  | `people`      |
+| `total-rewards`                                    | `people`      |
+| `hiring`                                           | `people`      |
+| `labor-and-employment-notices`                     | `people`      |
+| `finance`                                          | `finance`     |
+| `engineering`                                      | `engineering` |
+| `eta/corporate-it/end-user-services/onboarding101` | `onboarding`  |
+| `company`                                          | `general`     |
+| `about`                                            | `general`     |
+| `values`                                           | `general`     |
+| `communication`                                    | `general`     |
+| `leadership`                                       | `general`     |
+| `tools-and-tips`                                   | `general`     |
+
+> Pages inside `onboarding` that mention payroll, benefits, equity or compensation are mapped to `people` with a per-file row, so access follows content, not just folder.
+
 ## Reproduce
 
 1. `git clone --depth 1 https://gitlab.com/gitlab-com/content-sites/handbook.git handbook-source`

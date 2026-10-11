@@ -10,6 +10,9 @@ EXCLUDED_PREFIXES: tuple[tuple[str, ...], ...] = (
 # Source-of-truth folder mapping table (path tuple -> department)
 _MAPPING_DATA: dict[tuple[str, ...], str] = {
     ("people-group", "general-onboarding"): "onboarding",
+    ("people-group", "general-onboarding", "tanewki-tips.md"): "people",
+    ("people-group", "general-onboarding", "_index.md"): "people",
+    ("eta", "corporate-it", "end-user-services", "onboarding101"): "onboarding",
     ("people-group",): "people",
     ("people-policies",): "people",
     ("total-rewards",): "people",
