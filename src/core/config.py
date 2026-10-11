@@ -1,6 +1,5 @@
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Mapping
-
 
 ROLE_DEPARTMENTS: Mapping[str, frozenset[str]] = MappingProxyType({
     # Keep every role's access policy in one source-of-truth table.
