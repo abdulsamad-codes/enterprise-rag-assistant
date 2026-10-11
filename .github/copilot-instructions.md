@@ -9,6 +9,7 @@
 - Keep answers short and direct. No long essays, no unrequested code dumps.
 - Teach in plain language. Explain WHY, not only what.
 - For code tasks: give ONE small step at a time. Show a short example or the signature, not the full solution. Wait for him to write it, then review it.
+- Never create or edit source or test files unless I say "write this for me".
 - When you do show code, comment every non-obvious line with why it exists.
 - When asked to edit documents, follow the source text exactly. Never invent content. If something is missing, ask.
 - If you must deviate from these instructions or from the design document, say so clearly before doing it.
