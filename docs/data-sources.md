@@ -18,5 +18,5 @@
 ## Reproduce
 
 1. `git clone --depth 1 https://gitlab.com/gitlab-com/content-sites/handbook.git handbook-source`
-2. `git -C handbook-source checkout 2c77a1f5b8c8a80cb7b5151ff11cfad84f98bfbb` (if the clone has moved on)
+2. `git -C handbook-source fetch --depth 1 origin 2c77a1f5b8c8a80cb7b5151ff11cfad84f98bfbb` then `git -C handbook-source checkout FETCH_HEAD` (needed only if the clone has moved on)
 3. Copy the selected pages into `data/<department>/`.
