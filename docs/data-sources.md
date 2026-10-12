@@ -17,8 +17,8 @@
 
 ## Department Mapping
 
-| Folder or path prefix                              | Department    |
-| -------------------------------------------------- | ------------- |
+| Folder or path prefix                                | Department      |
+| ---------------------------------------------------- | --------------- |
 | `people-group/general-onboarding`                  | `onboarding`  |
 | `people-group/general-onboarding/tanewki-tips.md`  | `people`      |
 | `people-group/general-onboarding/_index.md`        | `people`      |
@@ -38,6 +38,17 @@
 | `tools-and-tips`                                   | `general`     |
 
 > Pages inside `onboarding` that mention payroll, benefits, equity or compensation are mapped to `people` with a per-file row, so access follows content, not just folder.
+
+
+
+## Excluded paths
+
+These are refused even though their parent folder is mapped.
+
+| Path prefix              | Reason                                    |
+| ------------------------ | ----------------------------------------- |
+| `finance/readmes`      | Personal pages about individual employees |
+| `finance/jihu-support` | Software process content, not finance     |
 
 ## Reproduce
 
