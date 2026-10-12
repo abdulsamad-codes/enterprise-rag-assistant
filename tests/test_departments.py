@@ -46,6 +46,20 @@ def test_segment_boundaries(path: str, expected: str):
 
 
 @pytest.mark.parametrize(
+    "path",
+    [
+        "finance/readmes./x.md",
+        "finance/readmes /x.md",
+        "people-group/folder./x.md",
+    ],
+)
+def test_segments_with_windows_stripped_characters_are_rejected(path: str):
+    """Reject segments whose trailing dot or space could be stripped by Windows."""
+    with pytest.raises(ValueError):
+        department_for(path)
+
+
+@pytest.mark.parametrize(
     "invalid_path",
     [
         "finance/readmes/danielle-ritter.md",  # Excluded personal readmes
