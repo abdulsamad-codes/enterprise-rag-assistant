@@ -67,6 +67,10 @@ def department_for(source_path: str) -> str:
     if ".." in segments or "." in segments or "" in segments:
         raise ValueError(f"Invalid path segments detected in: {source_path!r}")
 
+    # Windows silently strips trailing dots and spaces, which could bypass exclusions.
+    if any(segment.endswith((".", " ")) for segment in segments):
+        raise ValueError(f"Path segments cannot end with dots or spaces: {source_path!r}")
+
     # Casefold segments for case-insensitive exclusion checking
     casefolded_segments = tuple(seg.casefold() for seg in segments)
 
