@@ -98,3 +98,14 @@ def test_link_lines_with_real_text_are_counted(text, expected):
 )
 def test_words_are_whitespace_separated(text, expected):
     assert real_word_count(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("[](https://x.com/page) word", 1),
+        ("[→](https://x.com/page) next", 1),
+    ],
+)
+def test_link_urls_never_count_as_words(text, expected):
+    assert real_word_count(text) == expected
