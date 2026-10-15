@@ -1,4 +1,6 @@
+import hashlib
 import re
+from pathlib import Path
 
 
 _LINK_ONLY_LINE = re.compile(r"^\s*[-*+]?\s*\[[^\]]*\]\([^)]*\)\s*$")
@@ -25,3 +27,10 @@ def real_word_count(text: str) -> int:
         body.append(_INLINE_LINK.sub(r"\1", line))
 
     return sum(any(character.isalnum() for character in piece) for piece in "\n".join(body).split())
+
+
+def file_sha256(path: Path) -> str:
+    data = path.read_bytes()
+    # Hash LF-normalized bytes so Windows and Linux copies share one fingerprint.
+    normalized_data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(normalized_data).hexdigest()
