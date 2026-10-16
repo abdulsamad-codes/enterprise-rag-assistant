@@ -171,7 +171,7 @@ Per-client configuration files are possible later. Multi-tenant hosting is not p
 
 ### 4.10 Logging and privacy
 
-By default the query log stores only: role, chunk IDs, scores, latency, and token count. The question and answer text are stored only when content logging is switched on. It is on while developing and off by default for any client deployment. Log files are excluded from Git, and a retention period is documented in the README. Automatic masking of personal data is a v2 item (section 12).
+By default the query log stores only: role, chunk IDs, scores, latency, and token count. The question and answer text are stored only when content logging is switched on. It is on while developing and off by default for any client deployment. Log files are excluded from Git, and a retention period is documented in the README. Automatic masking of personal data is a v2 item (section 11).
 
 ## 5. Data Model
 
@@ -246,15 +246,7 @@ docs/
 | NFR-04        | Token count in the log              |
 | NFR-06        | Docker (Phase 4)                    |
 
-## 11. Changes Needed in the Requirements Document
-
-- Section 2 (out of scope): replace "simple role selector or basic login" with **basic login with a signed token**, since 4.2 requires it.
-- Add **FR-11:** The system shall authenticate users and determine their role from a signed token.
-- Add **FR-12:** The system shall give the same "not found" reply for restricted and non-existent documents.
-- Add **FR-13:** The system shall verify that every citation refers to a chunk supplied to the LLM, remove invalid citations, and return "not found" if none remain.
-- Change **FR-08:** query logging shall store content (question and answer text) only when content logging is switched on; by default it stores role, chunk IDs, scores, latency, and token count.
-
-## 12. Known Limitations and Version 2 Roadmap
+## 11. Known Limitations and Version 2 Roadmap
 
 These are real enterprise needs that this version deliberately does not build. Each is documented so a client conversation can address it honestly.
 

@@ -60,6 +60,21 @@ def test_segments_with_windows_stripped_characters_are_rejected(path: str):
 
 
 @pytest.mark.parametrize(
+    "path",
+    [
+        "finance/readmes:stream/x.md",
+        "finance/README~1/x.md",
+        "finance/readmes\u200b/x.md",
+        "finance/\uff26\uff29\uff2e\uff21\uff2e\uff23\uff25/x.md",
+    ],
+)
+def test_segments_reject_exotic_characters(path: str):
+    """Reject path characters that could bypass clear department boundaries."""
+    with pytest.raises(ValueError):
+        department_for(path)
+
+
+@pytest.mark.parametrize(
     "invalid_path",
     [
         "finance/readmes/danielle-ritter.md",  # Excluded personal readmes

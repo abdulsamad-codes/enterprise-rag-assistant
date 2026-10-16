@@ -10,10 +10,22 @@ Phase 3: implementation in progress
 
 Python, FastAPI, ChromaDB, BM25, reranker, Groq, Streamlit, Docker
 
+## Setup and tests
+
+Use Python 3.12 and PowerShell from the project root:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pytest
+```
+
 ## Documentation
 
 - [Requirements](docs/01-requirements.md)
 - [Design](docs/02-design.md)
+- [Data sources](docs/data-sources.md)
 
 ## Attribution
 
