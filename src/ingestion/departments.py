@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping
 from types import MappingProxyType
 
@@ -70,6 +71,10 @@ def department_for(source_path: str) -> str:
     # Windows silently strips trailing dots and spaces, which could bypass exclusions.
     if any(segment.endswith((".", " ")) for segment in segments):
         raise ValueError(f"Path segments cannot end with dots or spaces: {source_path!r}")
+
+    # Restrict segments to characters observed in the pinned handbook checkout.
+    if any(re.fullmatch(r"[A-Za-z0-9._-]+", segment) is None for segment in segments):
+        raise ValueError(f"Path contains unsupported characters: {source_path!r}")
 
     # Casefold segments for case-insensitive exclusion checking
     casefolded_segments = tuple(seg.casefold() for seg in segments)

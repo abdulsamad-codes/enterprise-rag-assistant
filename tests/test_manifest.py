@@ -1,6 +1,13 @@
 import pytest
 
-from src.ingestion.manifest import file_sha256, real_word_count
+from src.ingestion.manifest import (
+    PageCandidate,
+    build_manifest,
+    file_sha256,
+    real_word_count,
+    select_pages,
+    write_manifest,
+)
 
 
 @pytest.mark.parametrize(
@@ -147,3 +154,79 @@ def test_sha256_handles_utf8_text(tmp_path):
 def test_sha256_missing_file_raises_file_not_found(tmp_path):
     with pytest.raises(FileNotFoundError):
         file_sha256(tmp_path / "missing.md")
+
+
+def test_select_pages_filters_short_pages_and_sorts_deterministically():
+    candidates = [
+        PageCandidate("people/z.md", "people", 200, "z"),
+        PageCandidate("people/short.md", "people", 149, "short"),
+        PageCandidate("finance/f.md", "finance", 180, "f"),
+        PageCandidate("people/a.md", "people", 180, "a"),
+    ]
+
+    selected = select_pages(candidates, targets={"people": 2, "finance": 1})
+
+    assert [candidate.source_path for candidate in selected] == [
+        "finance/f.md",
+        "people/a.md",
+        "people/z.md",
+    ]
+
+
+def test_select_pages_is_independent_of_input_order():
+    candidates = [
+        PageCandidate("people/b.md", "people", 180, "b"),
+        PageCandidate("people/a.md", "people", 180, "a"),
+    ]
+
+    forward = select_pages(candidates, targets={"people": 1})
+    reversed_order = select_pages(reversed(candidates), targets={"people": 1})
+
+    assert forward == reversed_order
+    assert forward[0].source_path == "people/a.md"
+
+
+def test_select_pages_rejects_insufficient_eligible_pages():
+    candidates = [PageCandidate("people/a.md", "people", 149, "a")]
+
+    with pytest.raises(ValueError):
+        select_pages(candidates, targets={"people": 1})
+
+
+def test_write_manifest_writes_sorted_csv(tmp_path):
+    output_path = tmp_path / "data-manifest.csv"
+    rows = [
+        PageCandidate("people/z.md", "people", 200, "z"),
+        PageCandidate("finance/a.md", "finance", 200, "a"),
+    ]
+
+    write_manifest(rows, output_path)
+
+    assert b"\r\n" not in output_path.read_bytes()
+    assert output_path.read_text(encoding="utf-8") == (
+        "source_path,department,sha256\n"
+        "finance/a.md,finance,a\n"
+        "people/z.md,people,z\n"
+    )
+
+
+def test_build_manifest_uses_mapped_eligible_pages(tmp_path):
+    source_root = tmp_path / "handbook"
+    output_path = tmp_path / "docs" / "data-manifest.csv"
+    eligible_page = source_root / "people-group" / "page.md"
+    short_page = source_root / "people-group" / "short.md"
+    unmapped_page = source_root / "security" / "page.md"
+    eligible_page.parent.mkdir(parents=True)
+    unmapped_page.parent.mkdir(parents=True)
+    eligible_page.write_text("word " * 150, encoding="utf-8")
+    short_page.write_text("short", encoding="utf-8")
+    unmapped_page.write_text("word " * 200, encoding="utf-8")
+
+    selected = build_manifest(
+        source_root,
+        output_path,
+        targets={"people": 1},
+    )
+
+    assert [candidate.source_path for candidate in selected] == ["people-group/page.md"]
+    assert output_path.read_text(encoding="utf-8").startswith("source_path,department,sha256\n")

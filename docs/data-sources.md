@@ -39,6 +39,12 @@
 
 > Pages inside `onboarding` that mention payroll, benefits, equity or compensation are mapped to `people` with a per-file row, so access follows content, not just folder.
 
+## Dataset Selection
+
+- Selected pages must contain at least 150 real words after front matter, link-only lines, and template lines are excluded.
+- The selected pages are recorded in `docs/data-manifest.csv` with `source_path`, `department`, and `sha256` columns.
+- The SHA-256 value fingerprints the page after CRLF line endings are normalized to LF.
+
 ## Excluded paths
 
 These are refused even though their parent folder is mapped.
