@@ -1,7 +1,15 @@
+import csv
+import re
+from collections import Counter
+from pathlib import Path
+
 import pytest
+
+from src.ingestion.departments import department_for
 
 from src.ingestion.manifest import (
     PageCandidate,
+    DEFAULT_SELECTION_TARGETS,
     build_manifest,
     file_sha256,
     real_word_count,
@@ -230,3 +238,72 @@ def test_build_manifest_uses_mapped_eligible_pages(tmp_path):
 
     assert [candidate.source_path for candidate in selected] == ["people-group/page.md"]
     assert output_path.read_text(encoding="utf-8").startswith("source_path,department,sha256\n")
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_select_pages_spreads_picks_across_subfolders(reverse):
+    paths = ["a/x1.md", "a/x2.md", "a/x3.md", "b/y1.md"]
+    candidates = [PageCandidate(path, "engineering", 150, "hash") for path in paths]
+    if reverse:
+        candidates.reverse()
+
+    selected = select_pages(candidates, targets={"engineering": 2})
+
+    assert [page.source_path for page in selected] == ["a/x1.md", "b/y1.md"]
+
+
+def test_select_pages_spreads_nested_topics_and_continues_after_small_groups():
+    paths = [
+        "engineering/a/one/1.md", "engineering/a/one/2.md",
+        "engineering/a/two/1.md", "engineering/b/1.md",
+    ]
+    candidates = [PageCandidate(path, "engineering", 150, "hash") for path in paths]
+
+    selected = select_pages(candidates, targets={"engineering": 3})
+
+    assert [page.source_path for page in selected] == [paths[0], paths[2], paths[3]]
+    assert len(select_pages(candidates, targets={"engineering": 4})) == 4
+
+
+def test_select_pages_keeps_root_pages_and_filters_before_spreading():
+    candidates = [
+        PageCandidate("_index.md", "general", 150, "root"),
+        PageCandidate("a/short.md", "general", 149, "short"),
+        PageCandidate("b/page.md", "general", 150, "page"),
+    ]
+    assert select_pages(candidates, targets={"general": 2}) == (candidates[0], candidates[2])
+    assert select_pages(candidates, targets={"general": 0}) == ()
+    with pytest.raises(ValueError):
+        select_pages(candidates, targets={"general": -1})
+
+
+def _committed_manifest_rows():
+    # Locate the committed fixture relative to this file, independent of the shell directory.
+    manifest = Path(__file__).resolve().parents[1] / "docs" / "data-manifest.csv"
+    with manifest.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        assert reader.fieldnames == ["source_path", "department", "sha256"]
+        return list(reader)
+
+
+def test_committed_manifest_has_valid_unique_sorted_rows_and_department_counts():
+    rows = _committed_manifest_rows()
+    paths = [row["source_path"] for row in rows]
+    assert paths == sorted(set(paths))
+    assert Counter(row["department"] for row in rows) == dict(DEFAULT_SELECTION_TARGETS)
+    for row in rows:
+        assert department_for(row["source_path"]) == row["department"]
+        assert re.fullmatch(r"[0-9a-f]{64}", row["sha256"])
+
+
+def test_committed_manifest_matches_copied_data_when_present():
+    data_root = Path(__file__).resolve().parents[1] / "data"
+    # A clean clone has no ignored dataset; row validation above must still run there.
+    if not data_root.exists():
+        pytest.skip("Local data/ dataset is absent")
+    for row in _committed_manifest_rows():
+        # The department is an access boundary; retain the original path below it.
+        path = data_root / row["department"] / row["source_path"]
+        assert path.is_file(), f"Missing manifest file: {path}"
+        assert file_sha256(path) == row["sha256"], f"Hash mismatch: {path}"
+        assert real_word_count(path.read_text(encoding="utf-8")) >= 150
