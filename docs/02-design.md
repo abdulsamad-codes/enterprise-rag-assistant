@@ -104,7 +104,7 @@ The UI sends a login request; the backend checks credentials and returns a signe
 
 ### 4.3 "Not found" is decided in two layers
 
-Vector search always returns *something*, even for an unrelated question. So "zero results" almost never happens. We use two layers instead:
+Vector search always returns _something_, even for an unrelated question. So "zero results" almost never happens. We use two layers instead:
 
 1. **Reranker threshold (permissive).** If the best reranker score is below the threshold, we stop before calling the LLM. The threshold is set low on purpose, so it only catches clearly unrelated questions.
 2. **LLM safety net.** The prompt tells the LLM to reply "insufficient context" when the chunks do not contain the answer. This catches the borderline cases without us tuning a harsh number.
@@ -161,7 +161,7 @@ Every stage takes a list of scored chunks and returns a list of scored chunks. A
 | Retrieval mode        | vector only, or hybrid (vector + keyword) |
 | Reranker              | on or off                                 |
 | Candidate counts      | how many chunks each stage keeps          |
-| "Not found" threshold | one value**per configuration**      |
+| "Not found" threshold | one value**per configuration**            |
 
 The "not found" check must use a score that means something on its own: the reranker score when the reranker is on, otherwise the best vector similarity. (Fused rank scores from RRF only order the candidates, so they are never used for this check.) Because the score type changes with the configuration, each configuration has its own calibrated threshold, stored next to it in the config.
 
@@ -177,8 +177,8 @@ By default the query log stores only: role, chunk IDs, scores, latency, and toke
 
 Every chunk carries:
 
-| Field          | Example                     | Purpose                               |
-| -------------- | --------------------------- | ------------------------------------- |
+| Field          | Example                   | Purpose                               |
+| -------------- | ------------------------- | ------------------------------------- |
 | chunk_id       | `time-off-004`            | Unique ID, used in logs and citations |
 | document_id    | `time-off`                | Which document it came from           |
 | title          | `Time Off Policy`         | Shown in citations                    |
@@ -192,11 +192,11 @@ Every chunk carries:
 
 ## 6. API Design
 
-| Endpoint             | Purpose                                                    | Auth           |
-| -------------------- | ---------------------------------------------------------- | -------------- |
-| `POST /auth/login` | Check credentials, return a token                          | None           |
+| Endpoint           | Purpose                                                  | Auth           |
+| ------------------ | -------------------------------------------------------- | -------------- |
+| `POST /auth/login` | Check credentials, return a token                        | None           |
 | `POST /ask`        | Body:`{question}`. Returns answer, citations, found flag | Token required |
-| `GET /health`      | Service status and index consistency check                 | None           |
+| `GET /health`      | Service status and index consistency check               | None           |
 
 Ingestion and evaluation are command-line scripts, not API endpoints, so there is no remote way to change documents.
 
@@ -208,14 +208,14 @@ Ingestion and evaluation are command-line scripts, not API endpoints, so there i
 
 ## 8. Decision Log (technology choices and known risks)
 
-| Component      | Choice                   | Reason                                         | Known risk                                                                                       | Mitigation                                                                                                                                                              |
-| -------------- | ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component      | Choice                   | Reason                                         | Known risk                                                                                       | Mitigation                                                                                                                                                            |
+| -------------- | ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Vector DB      | ChromaDB                 | Already known; supports metadata filters       | Embedded mode is weak under many concurrent users and can lock if several worker processes write | v1 runs a single API worker; ingestion runs offline, never while serving; engine sits behind the`VectorStore` interface; migration path to pgvector/Qdrant documented |
-| Keyword search | BM25                     | Catches exact terms that meaning search misses | Two indexes can fall out of sync, and a stale keyword index could leak restricted text           | Single chunk store, both indexes rebuilt from it, department filter applied in both, startup consistency check                                                          |
-| Reranker       | Small cross-encoder, CPU | Measurable quality gain                        | Adds roughly 150-400 ms per query (estimate, to be measured)                                     | Candidate cap of 10 (configurable); measured against the 8-second target; skip step if it exceeds a timeout                                                             |
-| LLM            | Groq, free tier          | Free, fast, already used                       | Rate limits can crash evaluation runs                                                            | Concurrency cap, retry with backoff, result caching; LLM behind an interface                                                                                            |
-| UI             | Streamlit                | Fast to build                                  | Re-runs the script on every action; session state is fragile                                     | UI holds only the token; all permission checks are in the backend                                                                                                       |
-| Embeddings     | Local bge-small          | Free; no data leaves the machine               | Lower quality than large hosted models                                                           | Measured in evaluation; replaceable                                                                                                                                     |
+| Keyword search | BM25                     | Catches exact terms that meaning search misses | Two indexes can fall out of sync, and a stale keyword index could leak restricted text           | Single chunk store, both indexes rebuilt from it, department filter applied in both, startup consistency check                                                        |
+| Reranker       | Small cross-encoder, CPU | Measurable quality gain                        | Adds roughly 150-400 ms per query (estimate, to be measured)                                     | Candidate cap of 10 (configurable); measured against the 8-second target; skip step if it exceeds a timeout                                                           |
+| LLM            | Groq, free tier          | Free, fast, already used                       | Rate limits can crash evaluation runs                                                            | Concurrency cap, retry with backoff, result caching; LLM behind an interface                                                                                          |
+| UI             | Streamlit                | Fast to build                                  | Re-runs the script on every action; session state is fragile                                     | UI holds only the token; all permission checks are in the backend                                                                                                     |
+| Embeddings     | Local bge-small          | Free; no data leaves the machine               | Lower quality than large hosted models                                                           | Measured in evaluation; replaceable                                                                                                                                   |
 
 ## 9. Planned Project Structure
 
@@ -252,7 +252,7 @@ These are real enterprise needs that this version deliberately does not build. E
 
 | Limitation in v1                                                                                | Why it is acceptable now                                                 | Version 2 direction                                                                  |
 | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Access is by department only (no per-project or per-person grants)                              | Matches the 4 simulated roles; keeps the access rule in one table        | Replace`department` with a list of access groups on each chunk                     |
+| Access is by department only (no per-project or per-person grants)                              | Matches the 4 simulated roles; keeps the access rule in one table        | Replace`department` with a list of access groups on each chunk                       |
 | Revoked users keep access until their token expires (30 min)                                    | Short expiry limits the window; no real identity system exists in a demo | Check entitlements against the company identity system (SSO/AD) on every request     |
 | Documents are updated by an offline ingestion script, and the service is restarted to load them | Document set is static for the demo                                      | Background ingestion worker with a job queue, and an incremental update path         |
 | Single API worker                                                                               | Avoids embedded-database write locks                                     | Move to pgvector or Qdrant, then scale workers                                       |

@@ -11,7 +11,7 @@
 
 ## How the data is used
 
-- Selected Markdown pages are copied unmodified into `data/<department>/`.
+- Selected Markdown pages are copied unmodified into `data/<department>/<original handbook structure>`.
 - `data/` is excluded from Git, so the files are not stored in this repository.
 - The department comes from the mapping table below. The longest matching path wins, so a file-level row overrides its folder. Any path not listed is refused.
 
@@ -42,12 +42,17 @@
 ## Dataset Selection
 
 - Selected pages must contain at least 150 real words after front matter, link-only lines, and template lines are excluded.
+- Targets are engineering 60, finance 35, people 50, onboarding 5, and general 40 (190 pages total).
+- Selection uses deterministic round-robin across sibling folders at every depth. Direct files form their own group. Groups and files are sorted by source path; exhausted groups leave the rotation. This spreads the sample across topics while filling each department's quota. The final manifest is sorted by source path.
 - The selected pages are recorded in `docs/data-manifest.csv` with `source_path`, `department`, and `sha256` columns.
 - The SHA-256 value fingerprints the page after CRLF line endings are normalized to LF.
+- Tests always validate the committed manifest's columns, unique sorted paths, department mappings, counts, and hash format. When `data/` exists, they also check every selected file's existence, hash, and 150-word minimum; only these local-file checks are skipped when `data/` is absent.
 
 ## Excluded paths
 
 These are refused even though their parent folder is mapped.
+
+Paths must be relative and use forward slashes. Each segment permits only ASCII letters, digits, `.`, `_`, and `-`; empty segments, `.` and `..`, and segments ending in a dot or space are refused. Mapping is case-sensitive; excluded prefixes are checked case-insensitively.
 
 | Path prefix            | Reason                                    |
 | ---------------------- | ----------------------------------------- |
@@ -58,4 +63,5 @@ These are refused even though their parent folder is mapped.
 
 1. `git clone --depth 1 https://gitlab.com/gitlab-com/content-sites/handbook.git handbook-source`
 2. `git -C handbook-source fetch --depth 1 origin 2c77a1f5b8c8a80cb7b5151ff11cfad84f98bfbb` then `git -C handbook-source checkout FETCH_HEAD` (needed only if the clone has moved on)
-3. Copy the selected pages into `data/<department>/`.
+3. From the assistant project root, regenerate the manifest with `.\.venv\Scripts\python.exe -c "from pathlib import Path; from src.ingestion.manifest import build_manifest; build_manifest(Path('../handbook-source/content/handbook'), Path('docs/data-manifest.csv'))"`.
+4. Copy each manifest page unmodified into `data/<department>/<source_path>`, then run `pytest -q` to verify the copied dataset.

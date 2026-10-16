@@ -1,9 +1,11 @@
 import csv
 import hashlib
 import re
-from collections.abc import Iterable, Mapping
+from collections import deque
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from itertools import islice
 from types import MappingProxyType
 
 from src.ingestion.departments import department_for
@@ -61,6 +63,31 @@ def file_sha256(path: Path) -> str:
     return hashlib.sha256(normalized_data).hexdigest()
 
 
+def _spread_pages(pages: list[PageCandidate], depth: int = 0) -> Iterator[PageCandidate]:
+    """Rotate through sibling folders, including nested topics and direct files."""
+    groups: dict[str, list[PageCandidate]] = {}
+    for page in pages:
+        parts = page.source_path.split("/")
+        # Direct files share a bucket so a folder's index pages cannot crowd out its children.
+        key = parts[depth] if len(parts) > depth + 1 else ""
+        groups.setdefault(key, []).append(page)
+
+    # Sorting both folders and input pages makes selection independent of discovery order.
+    streams = deque(
+        iter(groups[key]) if key == "" else _spread_pages(groups[key], depth + 1)
+        for key in sorted(groups)
+    )
+    while streams:
+        stream = streams.popleft()
+        try:
+            page = next(stream)
+        except StopIteration:
+            # Exhausted folders leave the rotation; larger folders can fill remaining slots.
+            continue
+        yield page
+        streams.append(stream)
+
+
 def select_pages(
     candidates: Iterable[PageCandidate],
     targets: Mapping[str, int] = DEFAULT_SELECTION_TARGETS,
@@ -79,7 +106,8 @@ def select_pages(
         department_pages = [candidate for candidate in eligible if candidate.department == department]
         if len(department_pages) < target:
             raise ValueError(f"Not enough eligible pages for department: {department}")
-        selected.extend(department_pages[:target])
+        # Apply the quota after spreading; keep the final CSV sorted for readable diffs.
+        selected.extend(islice(_spread_pages(department_pages), target))
 
     return tuple(sorted(selected, key=lambda candidate: candidate.source_path))
 
