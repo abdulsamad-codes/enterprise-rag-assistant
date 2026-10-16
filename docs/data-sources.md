@@ -48,11 +48,13 @@
 - The SHA-256 value fingerprints the page after CRLF line endings are normalized to LF.
 - Tests always validate the committed manifest's columns, unique sorted paths, department mappings, counts, and hash format. When `data/` exists, they also check every selected file's existence, hash, and 150-word minimum; only these local-file checks are skipped when `data/` is absent.
 
+## Path rules
+
+Paths must be relative and use forward slashes. Each segment permits only ASCII letters, digits, `.`, `_`, and `-`; empty segments, `.` and `..`, and segments ending in a dot or space are refused. Mapping is case-sensitive; excluded prefixes are checked case-insensitively.
+
 ## Excluded paths
 
 These are refused even though their parent folder is mapped.
-
-Paths must be relative and use forward slashes. Each segment permits only ASCII letters, digits, `.`, `_`, and `-`; empty segments, `.` and `..`, and segments ending in a dot or space are refused. Mapping is case-sensitive; excluded prefixes are checked case-insensitively.
 
 | Path prefix            | Reason                                    |
 | ---------------------- | ----------------------------------------- |
