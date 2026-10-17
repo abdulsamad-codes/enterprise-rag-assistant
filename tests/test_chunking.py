@@ -1,4 +1,4 @@
-from src.ingestion.chunking import split_into_sections, split_long_section
+from src.ingestion.chunking import chunk_document, split_into_sections, split_long_section
 
 
 def test_each_heading_starts_a_new_section():
@@ -45,3 +45,24 @@ def test_a_paragraph_longer_than_the_limit_is_kept_whole():
     section = "one two three four five six seven eight nine ten eleven twelve"
 
     assert split_long_section(section, max_words=5) == [section]
+
+
+def test_chunk_document_labels_every_piece():
+    # Preserve source identity and department labels for citations and access filtering.
+    chunks = chunk_document(
+        source_path="finance/expenses.md",
+        department="finance",
+        text="# Expenses\nintro\n## Travel\ntext",
+    )
+
+    assert len(chunks) == 2
+    assert [chunk.chunk_id for chunk in chunks] == [
+        "finance/expenses.md#000",
+        "finance/expenses.md#001",
+    ]
+    assert all(chunk.department == "finance" for chunk in chunks)
+    assert all(chunk.document_id == "finance/expenses.md" for chunk in chunks)
+    assert [chunk.text for chunk in chunks] == [
+        "# Expenses\nintro",
+        "## Travel\ntext",
+    ]
