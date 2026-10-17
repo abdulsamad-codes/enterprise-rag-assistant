@@ -2,11 +2,18 @@ def split_into_sections(text: str) -> list[str]:
     # Keep finished sections separate from the lines still being collected.
     sections = []
     current = []
+    # Remember whether lines belong to a code example rather than document headings.
+    in_code_block = False
 
     # Read one line at a time so headings can mark section boundaries.
     for line in text.splitlines():
+        # Opening and closing backtick fences switch how subsequent lines are treated.
+        if line.strip().startswith("```"):
+            in_code_block = not in_code_block
+
         # Save existing content before a new heading, avoiding an empty first section.
-        if line.startswith("#") and current:
+        # Hash lines inside code examples must stay in the current section.
+        if line.startswith("#") and not in_code_block and current:
             sections.append("\n".join(current))
             current = []
 
