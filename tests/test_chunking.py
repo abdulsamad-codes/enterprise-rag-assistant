@@ -1,4 +1,4 @@
-from src.ingestion.chunking import split_into_sections
+from src.ingestion.chunking import split_into_sections, split_long_section
 
 
 def test_each_heading_starts_a_new_section():
@@ -24,3 +24,17 @@ def test_hash_without_a_space_is_not_a_heading():
     text = "# A\n#hashtag\ntext"
 
     assert split_into_sections(text) == [text]
+
+
+def test_paragraphs_are_packed_until_the_word_limit():
+    # Keep whole paragraphs together while preventing the next one from exceeding the limit.
+    section = (
+        "one two three four five\n\n"
+        "six seven eight nine ten\n\n"
+        "eleven twelve thirteen fourteen fifteen"
+    )
+
+    assert split_long_section(section, max_words=10) == [
+        "one two three four five\n\nsix seven eight nine ten",
+        "eleven twelve thirteen fourteen fifteen",
+    ]

@@ -33,3 +33,32 @@ def split_into_sections(text: str) -> list[str]:
 
     # Return the completed sections for later chunking stages.
     return sections
+
+
+def split_long_section(section: str, max_words: int) -> list[str]:
+    # Use paragraph boundaries to keep related sentences together.
+    paragraphs = section.split("\n\n")
+    # Track finished pieces separately from the paragraphs and word count being collected.
+    pieces = []
+    current = []
+    current_words = 0
+
+    for paragraph in paragraphs:
+        # Count whitespace-separated words to measure the piece against the soft limit.
+        words = len(paragraph.split())
+        # Save existing paragraphs before the next one would exceed the limit.
+        if current and current_words + words > max_words:
+            pieces.append("\n\n".join(current))
+            current = []
+            current_words = 0
+
+        # Keep each paragraph whole, even when it alone exceeds the soft limit.
+        current.append(paragraph)
+        current_words += words
+
+    # The last piece has no following paragraph to trigger saving it in the loop.
+    if current:
+        pieces.append("\n\n".join(current))
+
+    # Return the packed pieces for later chunking stages.
+    return pieces
