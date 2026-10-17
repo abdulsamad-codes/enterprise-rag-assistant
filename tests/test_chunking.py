@@ -38,3 +38,10 @@ def test_paragraphs_are_packed_until_the_word_limit():
         "one two three four five\n\nsix seven eight nine ten",
         "eleven twelve thirteen fourteen fifteen",
     ]
+
+
+def test_a_paragraph_longer_than_the_limit_is_kept_whole():
+    # Preserve a paragraph's meaning even when it exceeds the soft word limit.
+    section = "one two three four five six seven eight nine ten eleven twelve"
+
+    assert split_long_section(section, max_words=5) == [section]
