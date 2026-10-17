@@ -1,6 +1,8 @@
 import re
 from dataclasses import dataclass
 
+from src.core.config import KNOWN_DEPARTMENTS
+
 
 # Recognize heading markers once for reuse across every line and document.
 _HEADING = re.compile(r"#{1,6} ")
@@ -18,6 +20,10 @@ class Chunk:
 def chunk_document(
     source_path: str, department: str, text: str, max_words: int = 300
 ) -> list[Chunk]:
+    # Reject a bad label before any splitting occurs or any chunk can exist.
+    if department not in KNOWN_DEPARTMENTS:
+        raise ValueError(f"Unknown department: {department!r}")
+
     # Split at headings first, then pack each section without mixing separate topics.
     pieces = []
     for section in split_into_sections(text):

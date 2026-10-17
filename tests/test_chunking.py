@@ -1,3 +1,5 @@
+import pytest
+
 from src.ingestion.chunking import chunk_document, split_into_sections, split_long_section
 
 
@@ -66,3 +68,10 @@ def test_chunk_document_labels_every_piece():
         "# Expenses\nintro",
         "## Travel\ntext",
     ]
+
+
+@pytest.mark.parametrize("department", ["", "Finance", "hr", "unknown"])
+def test_chunk_document_rejects_unknown_departments(department):
+    # Reject invalid labels before they can enter storage and break access filtering.
+    with pytest.raises(ValueError):
+        chunk_document("a/b.md", department, "# T\ntext")
