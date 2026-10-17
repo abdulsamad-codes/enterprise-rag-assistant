@@ -1,3 +1,10 @@
+import re
+
+
+# Recognize heading markers once for reuse across every line and document.
+_HEADING = re.compile(r"#{1,6} ")
+
+
 def split_into_sections(text: str) -> list[str]:
     # Keep finished sections separate from the lines still being collected.
     sections = []
@@ -13,7 +20,7 @@ def split_into_sections(text: str) -> list[str]:
 
         # Save existing content before a new heading, avoiding an empty first section.
         # Hash lines inside code examples must stay in the current section.
-        if line.startswith("#") and not in_code_block and current:
+        if _HEADING.match(line) and not in_code_block and current:
             sections.append("\n".join(current))
             current = []
 

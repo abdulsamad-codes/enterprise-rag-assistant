@@ -17,3 +17,10 @@ def test_hash_lines_inside_code_blocks_are_not_headings():
     text = "# Setup\n\n```\n# install dependencies\npip install x\n```\ndone"
 
     assert split_into_sections(text) == [text]
+
+
+def test_hash_without_a_space_is_not_a_heading():
+    # A hashtag is plain text, so it must not split the current section.
+    text = "# A\n#hashtag\ntext"
+
+    assert split_into_sections(text) == [text]
