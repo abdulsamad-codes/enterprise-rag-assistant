@@ -6,7 +6,7 @@ Read this whole file before doing anything. It is the briefing for any AI coding
 
 - Owner: Abdul Samad, BS Software Engineering student, based in Peshawar, Pakistan. GitHub: `abdulsamad-codes`.
 - This is his first real-world-style project. It is a portfolio piece for GitHub, LinkedIn and later pitches to AI firms, so quality and clear reasoning matter more than speed.
-- **He writes the code himself.** Your default role is mentor and reviewer, not author.
+- **He writes the code himself.** Your default role is mentor and reviewer, not author. He has said that when agents wrote whole changes he stopped understanding the code, so: never write a whole function or test for him unless he says "write this for me". Explain the idea, give the signature and the test cases, and wait.
 - Repo: `https://github.com/abdulsamad-codes/enterprise-rag-assistant` (public).
 
 ### How to respond
@@ -54,44 +54,54 @@ Python 3.12, FastAPI, ChromaDB behind a `VectorStore` interface, BM25 keyword se
 9. Query logs store role, chunk IDs, scores, latency, token count. Question and answer text only when content logging is switched on. Truncate and sanitize any logged role value.
 10. Single API worker in v1 (embedded ChromaDB limitation).
 
-## 5. Current state (main = `eefc9b8`, 89 tests passing)
+## 5. Current state (update this section after every merged PR)
 
-Phases 1 and 2 (requirements, design) are finished and tagged (`v0.2-requirements`, `v0.3-design`). Phase 3 (implementation) is in progress.
+Phases 1 and 2 (requirements, design) are finished and tagged (`v0.2-requirements`, `v0.3-design`). Phase 3 (implementation) is in progress. Last verified: 115 tests on the chunking branch (114 pass and 1 skips on a fresh clone without the local `data/` folder). Check `git log` for what is already merged.
 
-Done and merged:
+Done:
 
-- `src/core/config.py`: `ROLE_DEPARTMENTS` (immutable `MappingProxyType` of `frozenset`s) and `allowed_departments(role)`, which raises `ValueError` for unknown or non-string roles.
-- `src/ingestion/departments.py`: `department_for(source_path)`. It matches path segments (not text prefixes), the longest mapping prefix wins, and it is case-folded. It refuses empty, `.` and `..` segments, segments ending in a dot or space (Windows strips them), and any path under `EXCLUDED_PREFIXES` (`finance/readmes`, `finance/jihu-support`). Any unmapped path raises `ValueError`.
-- `src/ingestion/manifest.py`: `real_word_count(text)` (skips front matter, Hugo `{{` shortcode lines and link-only lines, keeps link text, counts pieces that contain a letter or digit) and `file_sha256(path)` (reads bytes, normalizes `\r\n` to `\n`, returns the SHA-256 hex digest).
-- Tests: `tests/test_config.py`, `tests/test_departments.py`, `tests/test_manifest.py`. Mutation checks were done to prove the tests catch bugs.
-- Docs, README, `.gitignore`, `.gitattributes` (`* text=auto`), `pytest.ini`, `requirements.txt` (pytest only so far).
+- `src/core/config.py`: `ROLE_DEPARTMENTS` (immutable table role -> departments), `allowed_departments(role)` (raises `ValueError` for unknown roles), and `KNOWN_DEPARTMENTS` (derived from the table, so there is one source of truth).
+- `src/ingestion/departments.py`: `department_for(source_path)`. Segment-based, longest prefix wins, strict character allowlist (`[A-Za-z0-9._-]`), refuses traversal, empty segments, trailing dot/space, excluded paths (`finance/readmes`, `finance/jihu-support`) and unmapped paths.
+- `src/ingestion/manifest.py`: `real_word_count`, `file_sha256` (LF-normalized), `select_pages` (deterministic round-robin across sibling folders), `write_manifest`, `build_manifest`.
+- `docs/data-manifest.csv`: 190 pages (engineering 60, finance 35, people 50, onboarding 5, general 40), sorted, with SHA-256. `data/` (git-ignored) holds the copied pages locally.
+- `src/ingestion/chunking.py`: `split_into_sections` (new section at `#`..`######` followed by a space; `#` lines inside backtick code fences are not headings), `split_long_section` (packs whole paragraphs under a soft word limit), frozen `Chunk` (chunk_id, document_id, department, text) and `chunk_document(source_path, department, text, max_words=300)`, which raises `ValueError` for an unknown department. `document_id` is the page's `source_path`; `chunk_id` is `source_path#000`, `#001`, and so on.
+- Tests cover all of the above, including guards that keep the mapping and the role table in agreement.
+
+### Findings from running the chunker on the real 190 pages (not yet fixed)
+
+- 3,997 chunks, median 73 words, 643 chunks under 20 words, 310 heading-only chunks, 111 chunks over 300 words, largest 1,643 words (a 152-line nested list with no blank lines).
+- All 190 pages start with YAML front matter (`---` ... `---`, with `title:`). It currently ends up inside the first chunk.
+- Tiny chunks are heading-only sections, `---` separators and HTML closing tags such as `</details>`.
+- 7 chunks have unmatched backtick fences.
+
+### Decisions agreed for the fixes (write tests first, one at a time)
+
+1. `strip_front_matter(text)`: remove a leading `---` block only when it has a closing `---`; otherwise leave the text unchanged. Keep its `title:` for the chunk title later.
+2. Minimum size: merge any piece under 20 words into the next piece (the last one into the previous one). The value is tunable in evaluation.
+3. A paragraph longer than the limit is split at line boundaries (never inside a line, never inside a code fence). A single very long line stays whole.
 
 ## 6. What is left (in order)
 
-### Step 1: finish the data manifest (current work)
+### Step 2 (current): make chunking work on real pages
 
-1. **Page selection.** A deterministic function that picks about 190 handbook pages from the pinned checkout. Targets: engineering ~60, finance ~35, people ~50, onboarding 4 to 6, general ~40. Each page needs at least 150 real words (use `real_word_count`). Deterministic means the same input gives the same list every time (sorted order, no randomness).
-2. **Manifest writer.** Produces `docs/data-manifest.csv` with the columns `source_path, department, sha256`. The hash is of the LF-normalized file. Destination layout: `data/<department>/<original handbook structure>`.
-3. **Manifest tests that run without `data/`.** Department validity is always checked. File existence and hash checks are skipped when `data/` is absent (it is git-ignored).
-4. **Docs.** Document the selection rules (150-word minimum, sha256, manifest) in `docs/data-sources.md`.
+1. Front matter: `strip_front_matter`, then use its `title:` as the chunk title (add `title` to `Chunk` in its own test).
+2. Minimum-size merge (20 words).
+3. Line-boundary splitting of oversized blocks, fence-safe.
+4. Re-run `scratch_chunk_stats.py`-style numbers on the real data (the script is a throwaway; do not commit it) and record the new numbers here.
 
-### Step 2: later phases (do not start before Step 1 is merged)
+### Step 3 and later (do not start before Step 2 is merged)
 
-- Ingestion: chunking, chunk store in SQLite, per-document incremental updates by checksum.
-- Indexes: ChromaDB and BM25 with the department filter applied before top-k.
+- Chunk store in SQLite (single source of truth), with per-document incremental updates by checksum.
+- Indexes: ChromaDB and BM25, with the department filter applied before top-k.
 - Retrieval: hybrid search, reranker, "not found" threshold.
 - Generation: Groq client behind `LLMClient`, citation ID validation.
-- API: FastAPI, signed-token auth, generic "not found", query logging.
-- UI: Streamlit.
-- Evaluation: test-question set in `eval/`.
-- Docker.
+- API: FastAPI, signed-token auth, generic "not found", query logging (truncate and sanitize logged role values).
+- UI: Streamlit. Evaluation set in `eval/`. Docker.
 
-### Small cleanup items (can be done as one docs PR)
+### Small cleanup items
 
-- Mark design section 11 as applied (or remove it).
-- Expand the README with setup and test instructions and a link to `docs/data-sources.md`.
 - Delete merged remote branches.
-- Optional hardening, after the manifest exists: a strict character allowlist in `department_for`, tested against the real handbook paths. Today it still accepts exotic characters such as zero-width spaces, `:`, `::$DATA`, `~1` and full-width letters.
+- Add a short note to the design document about `document_id`/`chunk_id` format and the chunk-size decisions once Step 2 is done.
 
 ## 7. Working method: TDD, one small piece at a time
 
