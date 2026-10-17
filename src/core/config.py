@@ -9,6 +9,13 @@ ROLE_DEPARTMENTS: Mapping[str, frozenset[str]] = MappingProxyType({
     "engineer": frozenset({"engineering", "onboarding", "general"}),
 })
 
+# Derive valid labels from the access table so a second department list cannot drift.
+KNOWN_DEPARTMENTS = frozenset({
+    department
+    for departments in ROLE_DEPARTMENTS.values()
+    for department in departments
+})
+
 
 def allowed_departments(role: object) -> frozenset[str]:
     # Reject missing, non-string, wrongly formatted, and unknown roles before lookup.

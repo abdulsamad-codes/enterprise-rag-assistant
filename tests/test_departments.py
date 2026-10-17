@@ -1,6 +1,6 @@
 import pytest
 
-from src.core.config import ROLE_DEPARTMENTS
+from src.core.config import KNOWN_DEPARTMENTS
 from src.ingestion.departments import DEPARTMENT_MAPPINGS, department_for
 
 
@@ -104,8 +104,7 @@ def test_invalid_or_excluded_paths_raise_value_error(invalid_path: str):
         department_for(invalid_path)  # type: ignore[arg-type]
 
 
-def test_every_mapped_department_exists_in_access_table():
-    """Cross-validate that every department in ingestion mappings exists in the RBAC config table."""
-    known_departments = {dept for allowed_set in ROLE_DEPARTMENTS.values() for dept in allowed_set}
+def test_every_mapped_department_is_a_known_department():
+    # Catch mapping typos before they produce labels the access policy does not recognize.
     mapped_departments = set(DEPARTMENT_MAPPINGS.values())
-    assert mapped_departments <= known_departments
+    assert mapped_departments <= KNOWN_DEPARTMENTS

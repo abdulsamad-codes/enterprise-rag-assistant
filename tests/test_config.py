@@ -1,6 +1,12 @@
 import pytest
 
-from src.core.config import ROLE_DEPARTMENTS, allowed_departments
+from src.core.config import KNOWN_DEPARTMENTS, ROLE_DEPARTMENTS, allowed_departments
+
+
+def test_known_departments_contains_exactly_the_supported_departments():
+    # Keep the shared validation set complete and immutable for every ingestion caller.
+    assert KNOWN_DEPARTMENTS == {"onboarding", "general", "people", "finance", "engineering"}
+    assert isinstance(KNOWN_DEPARTMENTS, frozenset)
 
 
 @pytest.mark.parametrize(
