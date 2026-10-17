@@ -1,6 +1,11 @@
 import pytest
 
-from src.ingestion.chunking import chunk_document, split_into_sections, split_long_section
+from src.ingestion.chunking import (
+    chunk_document,
+    split_into_sections,
+    split_long_section,
+    strip_front_matter,
+)
 
 
 def test_each_heading_starts_a_new_section():
@@ -75,3 +80,50 @@ def test_chunk_document_rejects_unknown_departments(department):
     # Reject invalid labels before they can enter storage and break access filtering.
     with pytest.raises(ValueError):
         chunk_document("a/b.md", department, "# T\ntext")
+
+
+def test_front_matter_is_removed():
+    # Page metadata must not become searchable answer text; preserve the actual body.
+    text = '---\ntitle: "Expenses"\n---\n# Expenses\nintro'
+
+    assert strip_front_matter(text) == "# Expenses\nintro"
+
+
+def test_text_without_front_matter_is_unchanged():
+    # Ordinary document content must pass through without alteration.
+    text = "# Expenses\nintro"
+
+    assert strip_front_matter(text) == text
+
+
+def test_unclosed_front_matter_is_left_alone():
+    # Without a closing delimiter, removing the opening block could destroy real content.
+    text = "---\nsome text\n# Heading\nmore"
+
+    assert strip_front_matter(text) == text
+
+
+def test_only_the_first_closing_delimiter_ends_front_matter():
+    # A later horizontal rule belongs to the body and must not extend the metadata block.
+    text = '---\ntitle: "Expenses"\n---\n# Expenses\nintro\n---\nmore'
+
+    assert strip_front_matter(text) == "# Expenses\nintro\n---\nmore"
+
+
+def test_empty_text_is_unchanged():
+    # An empty page has no front matter or body to remove.
+    assert strip_front_matter("") == ""
+
+
+def test_delimiter_with_extra_text_does_not_close_front_matter():
+    # A delimiter prefix is not a whole delimiter line, so preserve the unclosed input.
+    text = "---\ntitle: x\n--- not a delimiter\nmore"
+
+    assert strip_front_matter(text) == text
+
+
+def test_horizontal_rule_without_opening_front_matter_is_unchanged():
+    # A delimiter later in ordinary content cannot make the page start with metadata.
+    text = "# Expenses\nintro\n---\nmore"
+
+    assert strip_front_matter(text) == text

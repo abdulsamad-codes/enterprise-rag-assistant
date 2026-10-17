@@ -8,6 +8,21 @@ from src.core.config import KNOWN_DEPARTMENTS
 _HEADING = re.compile(r"#{1,6} ")
 
 
+def strip_front_matter(text: str) -> str:
+    # Keep line endings so removing metadata does not rewrite the remaining body.
+    lines = text.splitlines(keepends=True)
+    # Only a delimiter on the first line at column zero can open front matter.
+    if lines and lines[0].rstrip() == "---":
+        # Start after the opening line and stop at the first whole closing delimiter.
+        for index in range(1, len(lines)):
+            if lines[index].rstrip() == "---":
+                # Reuse the original line endings, including any trailing newline.
+                return "".join(lines[index + 1:])
+
+    # Missing or unclosed metadata must leave the original content untouched.
+    return text
+
+
 # Freeze labels and text so later pipeline stages cannot accidentally reassign them.
 @dataclass(frozen=True)
 class Chunk:
